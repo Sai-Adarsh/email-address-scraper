@@ -1,0 +1,133 @@
+'''
+Created on December 3, 2016
+
+@author: alexlacey
+'''
+
+# Two notes about this code:
+# 1. This code is not extremely clean or well-annotated. It was simply written to get the job done.
+# 2. This repo has been published only for those interested in the process of web-scraping or in adapting my code for their own use. In order to prevent people spamming the email addresses I've collected, I have hidden the specific urls so that my scrape cannot be copied directly. In locations where urls have been hidden, I added a comment describing it at the end of the line so that people may understand the process.
+    
+import requests
+from bs4 import BeautifulSoup
+
+
+### 1. Getting a list of urls (1 for each club page)
+
+# Requests
+r = requests.get("not shown") -- webpage URL
+print(r.status_code)
+osu = r.content
+
+# Beautiful Soup
+soup = BeautifulSoup(osu, 'html.parser')
+link_list = []
+for link in soup.find_all('a'):
+    link_list.append(link.get('href'))
+    
+real_list = []
+for link in link_list:
+    if "not shown" in link: # url path end
+        real_list.append(link)
+print(len(real_list)) # should be 1350
+
+real_list2 = []
+for i in real_list:
+    real_list2.append("not shown" + i) # url path beginning
+
+urls = real_list2
+
+
+
+
+
+### 2. Extracting info from each student org page
+
+all_org_emails = []
+for org in urls:
+    specific_url = org
+
+    # Requests
+    req = requests.get(specific_url)
+    print(req.status_code)
+    exa = req.content
+    
+    # Beautiful Soup
+    soup2 = BeautifulSoup(exa, 'html.parser')
+    #table = soup2.find_all('table')
+    #print(table)
+    import re
+    
+    rows = []
+    for row in soup2.find_all('th'):
+        rows.append(re.sub('<[^<]+?>', '', str(row)))
+    
+    data = []
+    for point in soup2.find_all('td'):
+        data.append(re.sub('<[^<]+?>', '', str(point)))
+    
+    data2 = []
+    for point in soup2.find_all('href'):
+        data2.append(point)
+    
+    soup = BeautifulSoup(exa, 'html.parser')
+    mailtos = soup.select('a[href^=mailto]')
+    emails = []
+    for i in mailtos:
+        if i.string != None:
+            emails.append(i.string.encode('utf-8').strip())
+    
+    
+    link_list5 = []
+    for link in soup2.find_all('a'):
+        link_list5.append(link.get('href'))
+    #for i in link_list5: print(i)
+    
+    link_list6 = [str(i) for i in link_list5]
+    
+    link_list7 = []
+    for i in link_list6:
+        if i[0:7] == "mailto:":
+            link_list7.append(i)
+    #for i in link_list7: print(i)
+    
+    link_list8 = []
+    for i in link_list7:
+        if "csls" not in i:
+            if "accessibility" not in i:
+                link_list8.append(i)
+    link_list9 = [i[7:] for i in link_list8]
+    
+    org_emails = link_list9
+    
+    all_org_emails.append(org_emails)
+
+
+### 3. Final extraction of email addresses
+
+# President
+all_org_emails_pres = []
+for i in all_org_emails:
+    del i[1:]
+    all_org_emails_pres.append(i[0])
+for i in all_org_emails_pres: print(i)
+
+# Vice President
+all_org_emails_vp = []
+for i in all_org_emails:
+    all_org_emails_vp.append(i[1])
+for i in all_org_emails_vp: print(i)
+
+# Treasurer
+all_org_emails_treas = []
+for i in all_org_emails:
+    all_org_emails_treas.append(i[2])
+for i in all_org_emails_pres: print(i)
+
+# Everyone
+full_list = []
+for i in all_org_emails_final:
+    for j in i:
+        full_list.append(j)
+print(len(full_list))
+for i in full_list: print(i)
